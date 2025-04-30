@@ -1,4 +1,9 @@
 # Ephemeral App in blocking mode
+#
+## load env vars:
+#    export $(grep -v '^#' .env | xargs)
+#    requires pulling env file into docker
+
 
 name: probely_ephemeral_tests
 
