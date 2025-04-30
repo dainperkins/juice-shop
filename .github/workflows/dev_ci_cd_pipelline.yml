@@ -2,6 +2,7 @@
 #
 ## load env vars:
 #    export $(grep -v '^#' .env | xargs)
+#    export $(grep -v '^#' .env | xargs -d '\n') (handles spaces in variables, likely not necessary)
 #    requires pulling env file into docker
 
 
