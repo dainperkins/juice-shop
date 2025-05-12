@@ -43,14 +43,23 @@ on:
 # setting these specifically to allow for east debugging and compatibility with push/pull/release/workflow_dispatch 
 # environment options.
 env:
-  DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
-  REPO: ( ${{ github.event.repository.name }} | juice-shop )              # github repo name
-  BRANCH:  ( ${{ github.event.base_ref }} | dev )                         # github branch name               
+  #DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
+  DOCKER_NETWORK: cicd
+  REPO: ( ${{ github.event.repository.name }} | "JUICE-SHOP" )            # github repo name
+  BRANCH:  ( ${{ github.event.base_ref }} | dev )                         # github branch name   
+  RELEASE: ( ${{ github.event.release.tag_name }} | latest )              # github release name            
+  # Snyk API & Web Environment
   SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
   SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
   SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                             # Snyk API & Web agent key
-  SAW_TARGET_NAME: ( ${{ vars.SAW_TARGET_NAME }} | ginandjuice )          # Snyk API & Web target name
-  SAW_TARGET_URL: ( ${{ vars.SAW_TARGET_URL }} | http://ginandjuice )     # Snyk API & Web target name
+  # SAW_TARGET_NAME: ( ${{ vars.SAW_TARGET_NAME }} | JuiceShop )            # Snyk API & Web target name 
+  SAW_TARGET_NAME: ( ${{ vars.SAW_TARGET_NAME }} | 'JuiceShop' )            # Snyk API & Web target name 
+  SAW_TARGET_URL: ( ${{ vars.SAW_TARGET_URL }} | 'http://juiceshop' )       # Snyk API & Web target name
+  SAW_TARGET_ID: ( ${{ vars.SAW_TARGET_ID }} | '2uKBayBZuFVZ' )                # Snyk API & Web target ID
+  # Snyk API & Web optional fields
+  SCAN_TYPE: ( ${{ vars.SAW_SCAN_TYPE }} | 'incremental' )                  # Snyk API & Web scan type
+  SCAN_PROFILE: ( ${{ vars.SAW_SCAN_PROFILE }} | 'existing' )               # Snyk API & Web scan profile
+  SCAN_ACTION: ( ${{ vars.SAW_CICD_ACTION }} | 'block-high' )               # Snyk API & Web scan action
 
 jobs:
   build:
