@@ -1,4 +1,4 @@
-o # Snyk APi & Web Ephemeral Single Target Github Action
+# Snyk APi & Web Ephemeral Single Target Github Action
 # This action will run Snyk API & Web (SAW) scans on the repository.
 # assumes:
 #    - target/scan config has already been created
