@@ -57,7 +57,8 @@ on:
 # setting these specifically to allow for east debugging and compatibility with push/pull/release/workflow_dispatch 
 # environment options.
 env:
-  DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
+#  DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
+  DOCKER_NETWORK: cicd
   REPO: ( ${{ github.event.repository.name }} | 'juice-shop' )            # github repo name
   BRANCH:  ( ${{ github.event.base_ref }} | dev )                         # github branch name   
   RELEASE: ( ${{ github.event.release.tag_name }} | latest )              # github release name            
