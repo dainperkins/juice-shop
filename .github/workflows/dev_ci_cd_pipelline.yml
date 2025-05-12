@@ -52,7 +52,7 @@ env:
   SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
   SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
   SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                             # Snyk API & Web agent key
-  # SAW_TARGET_NAME: ( ${{ vars.SAW_TARGET_NAME }} | JuiceShop )            # Snyk API & Web target name 
+  SAW_TARGET_NAME: juiceshop          # Snyk API & Web target name 
 
   SAW_TARGET_URL:  ${{ vars.SAW_TARGET_URL }}     # Snyk API & Web target name
   SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}                # Snyk API & Web target ID
