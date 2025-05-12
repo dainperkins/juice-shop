@@ -5,19 +5,73 @@
 #    export $(grep -v '^#' .env | xargs -d '\n') (handles spaces in variables, likely not necessary)
 #    requires pulling env file into docker
 
+## Snyk APi & Web Ephemeral Single Target Github Action
+# This action will run Snyk API & Web (SAW) scans on the repository.
+# assumes:
+#    - target/scan config has already been created
+#    - connectivity / name resolution relies on docker
+#    
+# Variables:
+# - Snyk API & Web Environment (in github repo $repo/.github/.snykaw)
+#   + saw_api: defaults to api.probely.com
+#   + saw_target_id: Snyk Web target.
+#   + scan_type: default is incremental
+#   + scan_settings: default is to use existing targat settings
+#
+# - github secrets
+#   + saw_token 
+#   + saw_agent_key
+#
+# - github Context
+#   + target_branch: populated from github context
+#   + target_release: populated from github context
+#
+# - opitonal configs
+#   + scan-type: defaults to incremental
+#   + scan-profile: defailts to existing target scan settings
+#   + scan-labels: defaults to branch and release
+#   + scan-action: block-high, block-medium, block, or none, default is block
+
 
 name: probely_ephemeral_tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "qa", "dev" ]
   pull_request:
-    branches: [ "main" ]
-    
+    branches: [ "main", "qa", "dev" ]
+  release:
+    types: [ created ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to scan'
+        required: true
+        default: 'dev'
+      release:
+        description: 'Release to scan'
+        required: true
+        default: 'latest'
+
+# Environment variables 
+# setting these specifically to allow for east debugging and compatibility with push/pull/release/workflow_dispatch 
+# environment options.
 env:
-  DOCKER_NETWORK: test_net                             #docker network name
-  REPO: ${{ github.event.repository.name }} 
-  BRANCH:  ${{ GITHUB_BASE_REF }}                       #docker alias - same as the target url
+  DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
+  REPO: ( ${{ github.event.repository.name }} | 'juice-shop' )            # github repo name
+  BRANCH:  ( ${{ github.event.base_ref }} | dev )                         # github branch name   
+  RELEASE: ( ${{ github.event.release.tag_name }} | latest )              # github release name            
+  # Snyk API & Web Environment
+  SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
+  SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
+  SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                             # Snyk API & Web agent key
+  SAW_TARGET_NAME: ( ${{ vars.SAW_TARGET_NAME }} | JuiceShop )            # Snyk API & Web target name    
+  SAW_TARGET_URL: ( ${{ vars.SAW_TARGET_URL }} | http://juiceshop )       # Snyk API & Web target name
+  SAW_TARGET_ID: ( ${{ vars.SAW_TARGET_ID }} | 123456789 )                # Snyk API & Web target ID
+  # Snyk API & Web optional fields
+  SCAN_TYPE: ( ${{ vars.SAW_SCAN_TYPE }} | incremental )                  # Snyk API & Web scan type
+  SCAN_PROFILE: ( ${{ vars.SAW_SCAN_PROFILE }} | existing )               # Snyk API & Web scan profile
+  SCAN_ACTION: ( ${{ vars.SAW_CICD_ACTION }} | block-high )               # Snyk API & Web scan action
 
 jobs:
   build:
@@ -40,31 +94,21 @@ jobs:
       - name: Build and run app container
         run: |
           # Build the Docker image
-          docker build -t test-app .
+          docker build -t $SAW_TARGET_NAME .
 
           # Run the Docker container with a custom hostname
-          docker run --name test-app \
-            --hostname custom-web-app \
-            --network testing \
-            -p 8080:8080 \
-            -d test-app
+          docker run --name $SAW_TARGET_NAME \
+            --hostname $SAW_TARGET_NAME \
+            --network $DOCKER_NETWORK \
+            --network-alias $SAW_TARGET_NAME \
+            -d $SAW_TARGET_NAME
 
-      # Step 5: Get container IP
-      - name: Get container IP address
-        run: |
-          CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test-app)
-          echo "Container IP is $CONTAINER_IP"
-
-          # Add the custom hostname to the /etc/hosts file
-          echo "$CONTAINER_IP ${{ vars.TARGET_HOSTNAME }} ${{ vars.TARGET_HOSTNAME }}." | sudo tee -a /etc/hosts
-          cat /etc/hosts # confirm host is on /etc/hosts
-
-      # Step 6: Wait for the app to start
+      # Step 5: Wait for the app to start
       - name: Wait for app to start
         run: |
           # Wait until the container is ready
           for i in {1..10}; do
-            if curl -s ${{ vars.TARGET_URL }} > /dev/null; then
+            if curl -s $SAW_TARGET_URL > /dev/null; then
               echo "App is up!";
               break;
             fi
@@ -72,35 +116,30 @@ jobs:
             sleep 2;
           done
 
-      # Step 7: Test application with curl
+      # Step 6: Test application with curl
       - name: Test application with curl
         run: |
           # Make a request to the web app using the custom hostname
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.TARGET_URL }})
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
           
           if [ "$RESPONSE" -ne 200 ]; then
             echo "App test failed with HTTP status $RESPONSE";
             exit 1;
           fi
 
-          curl -s -i ${{ vars.TARGET_URL }}
+          curl -s -i $SAW_TARGET_URL
           
           echo "App test passed with HTTP status $RESPONSE";
 
-      # Setp 8: Start scanning agent
+      # Setp 7: Start scanning agent
       - name: Start Scanning Agent
         run: |
           # Using docker agent
           docker run -d --name probely-agent \
             --cap-add NET_ADMIN \
-            --network custom-network \
-            -e FARCASTER_AGENT_TOKEN=${{ secrets.AGENT_TOKEN }} \
-            --device /dev/net/tun probely/farcaster-onprem-agent:v2
-
-          # Using userspace agent
-          # chmod +x scanning-agent/farcasterd-linux-amd64-0.4.3
-          # ./scanning-agent/farcasterd-linux-amd64-0.4.3 --token ${{ secrets.AGENT_TOKEN }} &
-
+            --network $DOCKER_NETWORK \
+            -e FARCASTER_AGENT_TOKEN=$SAW_AGENT_KEY \
+            --device /dev/net/tun probely/farcaster-onprem-agent:v3
 
       # Step 9: Wait for agent to stat
       - name: Wait for agent to stat
