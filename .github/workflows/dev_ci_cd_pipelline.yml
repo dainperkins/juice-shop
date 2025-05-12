@@ -1,4 +1,4 @@
-# Snyk APi & Web Ephemeral Single Target Github Action
+o # Snyk APi & Web Ephemeral Single Target Github Action
 # This action will run Snyk API & Web (SAW) scans on the repository.
 # assumes:
 #    - target/scan config has already been created
@@ -107,6 +107,7 @@ jobs:
       # Step 6: Test application with curl
       - name: Test application with curl
         run: |
+          echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_URL"
           # Make a request to the web app using the custom hostname
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
           
@@ -130,7 +131,7 @@ jobs:
             --device /dev/net/tun probely/farcaster-onprem-agent:v3
 
       # Step 9: Wait for agent to stat
-      - name: Wait for agent to stat
+      - name: Wait for agent to start
         run: |
           # Wait until the probely-agent is ready
           for i in {1..10}; do
