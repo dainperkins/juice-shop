@@ -108,7 +108,7 @@ jobs:
       - name: Test application with curl
         run: |
           # Make a request to the web app using the custom hostname
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_NAME)
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
           
           if [ "$RESPONSE" -ne 200 ]; then
             echo "App test failed with HTTP status $RESPONSE";
