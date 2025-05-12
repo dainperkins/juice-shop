@@ -151,7 +151,7 @@ jobs:
       # Step 10: Install Probely CLI
       - name: Install Probely CLI
         run: |
-          echo "probely targets get --api-key $SAW_API_KEY"
+          # echo "probely targets get --api-key $SAW_API_KEY"
           # Install Probely CLI
           pip install probely
           # Test probely GET TARGETS
@@ -162,7 +162,7 @@ jobs:
         run: |
           for i in {1..20}; do
             echo "-----------------------------------"
-            SCAN_ID=$(probely targets start-scan ${{ vars.TARGET_ID }} -o IDS_ONLY --api-key ${{ secrets.PROBELY_API_KEY }})
+            SCAN_ID=$(probely targets start-scan $SAW_TARGET_ID -o IDS_ONLY --api-key $SAW_API_KEY)
             echo ${SCAN_ID}
             if [ -f ${SCAN_ID} ]; then
               echo "Scan didn't start... Retry start-scan"
