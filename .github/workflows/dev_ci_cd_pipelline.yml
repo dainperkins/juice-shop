@@ -175,9 +175,9 @@ jobs:
           done
           if [ -f $SCAN_ID ]; then
             echo "No Scan ID, aborting..."
-            docker stop test-app
+            docker stop $SAW_TARGET_NAME
             docker stop probely-agent
-            docker rm test-app
+            docker rm $SAW_TARGET_NAME
             docker rm probely-agent
             docker network rm custom-network
             exit 1
@@ -209,9 +209,9 @@ jobs:
           echo "HIGH vulnerabilities: ${HIGH_VULNS}"
           if [ $HIGH_VULNS -gt 0 ]; then
             echo "Scan has High vulnerabilities... aborting"
-            docker stop test-app
+            docker stop $SAW_TARGET_NAME
             docker stop probely-agent
-            docker rm test-app
+            docker rm $SAW_TARGET_NAME
             docker rm probely-agent
             docker network rm custom-network
 
@@ -223,8 +223,8 @@ jobs:
       # Step 14: Clean up
       - name: Clean up Docker resources
         run: |
-          docker stop test-app
+          docker stop $SAW_TARGET_NAME
           docker stop probely-agent
-          docker rm test-app
+          docker rm $SAW_TARGET_NAME
           docker rm probely-agent
           docker network rm custom-network
