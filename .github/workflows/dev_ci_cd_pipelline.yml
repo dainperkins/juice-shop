@@ -179,7 +179,7 @@ jobs:
             docker stop probely-agent
             docker rm $SAW_TARGET_NAME
             docker rm probely-agent
-            docker network rm custom-network
+            docker network rm $DOCKER_NETWORK
             exit 1
           fi
 
@@ -213,7 +213,7 @@ jobs:
             docker stop probely-agent
             docker rm $SAW_TARGET_NAME
             docker rm probely-agent
-            docker network rm custom-network
+            docker network rm $DOCKER_NETWORK
 
             exit 1
           else
@@ -227,4 +227,4 @@ jobs:
           docker stop probely-agent
           docker rm $SAW_TARGET_NAME
           docker rm probely-agent
-          docker network rm custom-network
+          docker network rm $DOCKER_NETWORK
