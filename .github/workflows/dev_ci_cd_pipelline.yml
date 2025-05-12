@@ -1,4 +1,4 @@
-## Snyk APi & Web Ephemeral Single Target Github Action
+shop## Snyk APi & Web Ephemeral Single Target Github Action
 # This action will run Snyk API & Web (SAW) scans on the repository.
 # assumes:
 #    - target/scan config has already been created
@@ -45,9 +45,9 @@ on:
 env:
   #DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
   DOCKER_NETWORK: cicd
-  REPO: ( ${{ github.event.repository.name }} | "JUICE-SHOP" )            # github repo name
-  BRANCH:  ( ${{ github.event.base_ref }} | dev )                         # github branch name   
-  RELEASE: ( ${{ github.event.release.tag_name }} | latest )              # github release name            
+  REPO: ( ${{ github.event.repository.name }} | "juice-shop" )            # github repo name
+  BRANCH:  ( ${{ github.event.base_ref }} | 'dev' )                         # github branch name   
+  RELEASE: ( ${{ github.event.release.tag_name }} | '1.1' )              # github release name            
   # Snyk API & Web Environment
   SAW_API_URL: 'api.probely.com'                                           # Snyk API & Web API url
   SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
