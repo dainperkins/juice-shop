@@ -154,7 +154,7 @@ jobs:
           # Install Probely CLI
           pip install probely
           # Test probely GET TARGETS
-          probely targets get --api-key ${{ secrets.PROBELY_API_KEY }}
+          probely targets get --api-key $SAW_API_KEY
       
       # Step 11: Start Scan
       - name: Start Scan
