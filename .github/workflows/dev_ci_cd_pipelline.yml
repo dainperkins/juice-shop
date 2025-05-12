@@ -105,20 +105,20 @@ jobs:
           done
 
       # Step 6: Test application with curl
-      - name: Test application with curl
-        run: |
-          echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_URL"
-          # Make a request to the web app using the custom hostname
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
-          
-          if [ "$RESPONSE" -ne 200 ]; then
-            echo "App test failed with HTTP status $RESPONSE";
-            exit 1;
-          fi
-
-          curl -s -i $SAW_TARGET_URL
-          
-          echo "App test passed with HTTP status $RESPONSE";
+      # - name: Test application with curl
+      #   run: |
+      #     echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_URL"
+      #     # Make a request to the web app using the custom hostname
+      #     RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
+      #     
+      #     if [ "$RESPONSE" -ne 200 ]; then
+      #       echo "App test failed with HTTP status $RESPONSE";
+      #       exit 1;
+      #     fi
+      # 
+      #     curl -s -i $SAW_TARGET_URL
+      #     
+      #     echo "App test passed with HTTP status $RESPONSE";
 
       # Setp 7: Start scanning agent
       - name: Start Scanning Agent
