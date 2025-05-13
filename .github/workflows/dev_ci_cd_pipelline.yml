@@ -147,7 +147,10 @@ jobs:
             fi
             sleep 2;
           done
-      
+      - name: Test connectivity
+      run: |
+        docker exec -t probely-agent curl http://$SAW_TARGET_NAME -v
+        
       # Step 10: Install Probely CLI
       - name: Install Probely CLI
         run: |
