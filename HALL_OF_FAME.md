@@ -1,6 +1,6 @@
 # Hall of Fame
 
-## Core Team
+## Core Team 
 
 - [Björn Kimminich](https://github.com/bkimminich) aka `bkimminich`
   ([Project Leader](https://www.owasp.org/index.php/Projects/Project_Leader_Responsibilities))
