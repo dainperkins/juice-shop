@@ -188,7 +188,7 @@ jobs:
       # Step 11: Start Scan
       - name: Start Scan
         run: |
-          for i in {1..20}; do
+          for i in {1..50}; do
             echo "-----------------------------------"
             SCAN_ID=$(probely targets start-scan $SAW_TARGET_ID -o IDS_ONLY --api-key $SAW_API_KEY)
             echo ${SCAN_ID}
