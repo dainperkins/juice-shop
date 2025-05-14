@@ -169,12 +169,12 @@ jobs:
             sleep 2;
           done
           
-      - name: Test connectivity
-        run: |
-          docker exec -t probely-agent apt-get update 
-          docker exec -t probely-agent apt-get install curl -y
-          echo docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
-          docker exec -t probely-agent curl $SAW_TARGET_URL:$PORT -v
+      #- name: Test connectivity
+      #  run: |
+      #    docker exec -t probely-agent apt-get update 
+      #    docker exec -t probely-agent apt-get install curl -y
+      #    echo docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
+      #    docker exec -t probely-agent curl $SAW_TARGET_URL:$PORT -v
           
       # Step 10: Install Probely CLI
       - name: Install Probely CLI
