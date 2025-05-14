@@ -52,8 +52,7 @@ env:
   SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
   SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
   SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                             # Snyk API & Web agent key
-  SAW_TARGET_NAME: juiceshop          # Snyk API & Web target name 
-
+  SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}          # Snyk API & Web target name 
   SAW_TARGET_URL:  ${{ vars.SAW_TARGET_URL }}     # Snyk API & Web target name
   SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}                # Snyk API & Web target ID
   # Snyk API & Web optional fields
@@ -89,6 +88,7 @@ jobs:
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
+            -p 3000:3000 \
             -d $SAW_TARGET_NAME
 
       # Step 5: Wait for the app to start & test with curl
@@ -97,7 +97,7 @@ jobs:
           # Wait until the container is ready
 
           # Get exposed port
-          port=$(docker inspect $SAW_TARGET_NAME | jq '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
+          port=$(docker inspect $SAW_TARGET_NAME | jq -r '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
 
           # for i in {1..10}; do
           #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$port)
@@ -173,8 +173,8 @@ jobs:
         run: |
           docker exec -t probely-agent apt-get update 
           docker exec -t probely-agent apt-get install curl -y
-          echo docker exec -t probely-agent curl http://$SAW_TARGET_NAME:3000 -v
-          docker exec -t probely-agent curl http://$SAW_TARGET_NAME:3000 -v
+          echo docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
+          docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
       # Step 10: Install Probely CLI
       - name: Install Probely CLI
         run: |
