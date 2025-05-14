@@ -91,18 +91,44 @@ jobs:
             --network-alias $SAW_TARGET_NAME \
             -d $SAW_TARGET_NAME
 
-      # Step 5: Wait for the app to start
+      # Step 5: Wait for the app to start & test with curl
       - name: Wait for app to start
         run: |
           # Wait until the container is ready
+
+          # Get exposed port
+          port=$(docker inspect $SAW_TARGET_NAME | jq '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
+
           for i in {1..10}; do
-            if curl -s $SAW_TARGET_URL > /dev/null; then
-              echo "App is up!";
+             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$port)
+
+             if [ "$RESPONSE" -eq 200 ]; then
+              echo "App is up and answering requests!";
               break;
             fi
             echo "Waiting for the app to be ready...";
             sleep 2;
           done
+
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "App test failed with HTTP status $RESPONSE";
+            exit 1;
+          fi
+
+
+
+
+
+
+
+      #    for i in {1..10}; do
+      #      if curl -s 127.0.0.1:$port > /dev/null; then
+      #        echo "App is up!";
+      #        break;
+      #      fi
+      #      echo "Waiting for the app to be ready...";
+      #      sleep 2;
+      #    done
 
       # Step 6: Test application with curl
       # - name: Test application with curl
