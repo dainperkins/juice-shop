@@ -168,6 +168,8 @@ jobs:
             fi
             sleep 2;
           done
+
+          docker logs probely-agent
           
       #- name: Test connectivity
       #  run: |
