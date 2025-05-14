@@ -151,6 +151,13 @@ jobs:
             -e FARCASTER_AGENT_TOKEN=$SAW_AGENT_KEY \
             --device /dev/net/tun probely/farcaster-onprem-agent:v3
 
+
+          echo "docker run -d --name probely-agent \
+            --cap-add NET_ADMIN \
+            --network $DOCKER_NETWORK \
+            -e FARCASTER_AGENT_TOKEN=$SAW_AGENT_KEY \
+            --device /dev/net/tun probely/farcaster-onprem-agent:v3"
+            
       # Step 9: Wait for agent to stat
       - name: Wait for agent to start
         run: |
