@@ -97,10 +97,10 @@ jobs:
           # Wait until the container is ready
 
           # Get exposed port
-          port=$(docker inspect $SAW_TARGET_NAME | jq -r '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
+          export PORT=$(docker inspect $SAW_TARGET_NAME | jq -r '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
 
           # for i in {1..10}; do
-          #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$port)
+          #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$PORT)
 
           #   if [ "$RESPONSE" -eq 200 ]; then
           #    echo "App is up and answering requests!";
@@ -117,7 +117,7 @@ jobs:
 
           echo "127.0.0.1:$port"
           for i in {1..10}; do
-            if curl -s http://127.0.0.1:$port > /dev/null; then
+            if curl -s http://127.0.0.1:$PORT > /dev/null; then
               echo "App is up!";
               break;
             fi
@@ -174,7 +174,8 @@ jobs:
           docker exec -t probely-agent apt-get update 
           docker exec -t probely-agent apt-get install curl -y
           echo docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
-          docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
+          docker exec -t probely-agent curl $SAW_TARGET_URL:$PORT -v
+          
       # Step 10: Install Probely CLI
       - name: Install Probely CLI
         run: |
