@@ -63,12 +63,18 @@ env:
   SCAN_TYPE: ${{ vars.SAW_SCAN_TYPE }}                   # Snyk API & Web scan type
   SCAN_PROFILE: ${{ vars.SAW_SCAN_PROFILE }}               # Snyk API & Web scan profile
   SCAN_ACTION: ${{ vars.SAW_CICD_ACTION }}            # Snyk API & Web scan action
-
+  GITHUB_CONTEXT: ${{ toJson(github) }}
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+
+      # step 2
+      - name: show gitgub info
+        uses: echo $GITHUB_CONTEXT
+        
       # Step 1
       - name: Checkout code
         uses: actions/checkout@v4
