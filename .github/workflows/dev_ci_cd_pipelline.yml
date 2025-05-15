@@ -70,10 +70,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # step 2
-      - name: show gitgub info
-        uses: echo $GITHUB_CONTEXT
         
       # Step 1
       - name: Checkout code
