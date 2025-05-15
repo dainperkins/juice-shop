@@ -43,15 +43,13 @@ on:
 # setting these specifically to allow for east debugging and compatibility with push/pull/release/workflow_dispatch 
 # environment options.
 env:
-  #DOCKER_NETWORK: ( ${{ vars.SAW_TARGET_NAME }}-net | ginandjuice-net )   # docker network name
+  # Docker Environment
   DOCKER_NETWORK: cicd
+  # Github references
   REPO:  ${{ github.event.repository.name }}           # github repo name
-  BRANCH:  ${{ github.event.base_ref }}                    # github branch name   
-  BRANCH_NAME:  ${{ github.event_name }}                    # github branch name
   RELEASE:  ${{ github.event.release.tag_name }}         # github release name
   REPO_NAME:  ${{ github.event.repository.name }}         # github repo name  
-  TEST1: ${{ github.head_ref }}    
-  TEST2: ${{ github.repository.name}}
+  BRANCH: "${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
   # Snyk API & Web Environment
   SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
   SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
