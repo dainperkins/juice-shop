@@ -112,12 +112,14 @@ jobs:
             -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
             -d $SAW_TARGET_NAME
 
+          if [ "$DEBUG_ME" -eq "true" ]; then
             echo " docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
             -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
-            -d $SAW_TARGET_NAME "
+            -d $SAW_TARGET_NAME 
+          fi
 
       # Step 6: Wait for the app to start & test with curl
       - name: Test application with curl
