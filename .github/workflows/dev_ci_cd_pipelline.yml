@@ -106,14 +106,15 @@ jobs:
           # hostname, network alias set for container to container comms
           # default port exposed for runner to container comms (verify container is up)
 
-           if [ "$DEBUG_ME" -eq "true" ]; then
-            echo "docker run --name $SAW_TARGET_NAME \
+         #  if [ "$DEBUG_ME" ]; then
+          echo "docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
             -p 3000:3000 \                                                                
             -d $SAW_TARGET_NAME"
-          fi
+         
+          #fi
           
           docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
