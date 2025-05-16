@@ -111,7 +111,7 @@ jobs:
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
-            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
+            -p 3000:3000 \                                                                
             -d $SAW_TARGET_NAME"
           fi
           
