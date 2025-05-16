@@ -93,33 +93,34 @@ jobs:
       - name: Create custom Docker network
         run: docker network create $DOCKER_NETWORK
 
-      # Step 4: Build and run the Docker app container
-      - name: Build and run container
+      # Step 4: Build app container
+      - name: Build app container
         run: |
           # Build the Docker image
           docker build -t $SAW_TARGET_NAME .
           
-      # Step 5: Build and run the Docker app container
-      - name: Build and run container
+      # Step 5: Run app container
+      - name: Run container
         run: |
           # Run the Docker container
           # hostname, network alias set for container to container comms
           # default port exposed for runner to container comms (verify container is up)
+
+           if [ "$DEBUG_ME" -eq "true" ]; then
+            echo "docker run --name $SAW_TARGET_NAME \
+            --hostname $SAW_TARGET_NAME \
+            --network $DOCKER_NETWORK \
+            --network-alias $SAW_TARGET_NAME \
+            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
+            -d $SAW_TARGET_NAME"
+          fi
+          
           docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
             -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
             -d $SAW_TARGET_NAME
-
-          if [ "$DEBUG_ME" -eq "true" ]; then
-            echo " docker run --name $SAW_TARGET_NAME \
-            --hostname $SAW_TARGET_NAME \
-            --network $DOCKER_NETWORK \
-            --network-alias $SAW_TARGET_NAME \
-            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
-            -d $SAW_TARGET_NAME 
-          fi
 
       # Step 6: Wait for the app to start & test with curl
       - name: Test application with curl
