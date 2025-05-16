@@ -22,12 +22,12 @@
 name: probely_ephemeral_tests
 
 on:
-  push:
-    branches: [ "main", "qa", "dev" ]
-  pull_request:
-    branches: [ "main", "qa", "dev" ]
-  release:
-    types: [ created ]
+ # push:
+ #   branches: [ "main", "qa", "dev" ]
+ # pull_request:
+ #   branches: [ "main", "qa", "dev" ]
+ # release:
+ #   types: [ created ]
   workflow_dispatch:
     inputs:
       branch:
@@ -38,30 +38,42 @@ on:
         description: 'Release to scan'
         required: true
         default: 'latest'
-
 # Environment variables 
 # setting these specifically to allow for east debugging and compatibility with push/pull/release/workflow_dispatch 
 # environment options.
 env:
-  # Docker Environment
+  ## Docker Environment
+  # docker network name used for container configs
   DOCKER_NETWORK: cicd
-  # Github references
-  REPO:  ${{ github.event.repository.name }}           # github repo name
-  RELEASE:  ${{ github.event.release.tag_name }}         # github release name
-  REPO_NAME:  ${{ github.event.repository.name }}         # github repo name  
-  BRANCH: ${{ github.head_ref:-github.ref.name }}
-  # Snyk API & Web Environment
-  SAW_API_URL: api.probely.com                                            # Snyk API & Web API url
-  SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                 # Snyk API & Web API key 
-  SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                             # Snyk API & Web agent key
-  SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}          # Snyk API & Web target name 
-  SAW_TARGET_URL:  ${{ vars.SAW_TARGET_URL }}     # Snyk API & Web target name
-  SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}                # Snyk API & Web target ID
-  # Snyk API & Web optional fields
-  SCAN_TYPE: ${{ vars.SAW_SCAN_TYPE }}                   # Snyk API & Web scan type
-  SCAN_PROFILE: ${{ vars.SAW_SCAN_PROFILE }}               # Snyk API & Web scan profile
-  SCAN_ACTION: ${{ vars.SAW_CICD_ACTION }}            # Snyk API & Web scan action
+  
+  ## Github references
+  # repo, release, branch, commit info from github env
+  REPO_NAME:  ${{ github.event.repository.name }}                                        
+  RELEASE:  ${{ github.event.release.tag_name }}                                       
+  BRANCH: ${{ github.head_ref }}:-${{ github.ref.name }}
+  COMMIT_HASH: ${{ github.sha }}
+  
+  ## Snyk API & Web Environment
+  # APi url, api and agent keys
+  SAW_API_URL: ${{ vars.SAW_API_URL }}                                                     
+  SAW_API_KEY: ${{ secrets.SAW_API_KEY }}                                             
+  SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                                           
+ 
+  ## Snyk APi & Web Target information
+  # Snyk API & Web target name, protocol (http/https), and port (as configured in container)
+  SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}                                          
+  SAW_TARGET_PORT: ${{ vars.SAW_TARGET_PORT }}
+  SAW_TARGET_PROTO: ${{ vars.SAW_TARGET_PROTO }}
+  SAW_TARGET_URL:  "${{ vars.SAW_TARGET_PROTO }}://${{ vars.SAW_TARGET_NAME }}:${{ vars.SAW_TARGET_PORT }}"     
+  SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}   
+
+  ## Snyk API & Web optional fields
+  # Not yet implemented - scan type (full, inremental), profile to specify scan profile, CICD_Action=block|info, context & debugging
+  SAW_SCAN_TYPE: ${{ vars.SAW_SCAN_TYPE }}                                                  
+  SAW_SCAN_PROFILE: ${{ vars.SAW_SCAN_PROFILE }}                                            
+  CICD_ACTION: ${{ vars.SAW_CICD_ACTION }}                                              
   GITHUB_CONTEXT: ${{ toJson(github) }}
+  DEBUG_ME: ${{ vars.DEBUG_ME }}  
  
 jobs:
   build:
@@ -82,68 +94,35 @@ jobs:
         run: docker network create $DOCKER_NETWORK
 
       # Step 4: Build and run the Docker app container
-      - name: Build and run app container
+      - name: Build and run container
         run: |
           # Build the Docker image
           docker build -t $SAW_TARGET_NAME .
 
-          # Run the Docker container with a custom hostname
+          # Run the Docker container
+          # hostname, network alias set for container to container comms
+          # default port exposed for runner to container comms (verify container is up)
           docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
-            -p 3000:3000 \
+            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
             -d $SAW_TARGET_NAME
 
       # Step 5: Wait for the app to start & test with curl
-      - name: Wait for app to start
+      - name: Test application with curl
         run: |
-          # Wait until the container is ready
+          echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT"
+          
+          # Make a request to the web app using the custom hostname
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT)
+           
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "App test failed with HTTP status $RESPONSE";
+            exit 1;
+          fi
 
-          # Get exposed port
-          export PORT=$(docker inspect $SAW_TARGET_NAME | jq -r '.[0].NetworkSettings.Ports | to_entries | .[0].key | split("/")[0]')
-
-          # for i in {1..10}; do
-          #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$PORT)
-
-          #   if [ "$RESPONSE" -eq 200 ]; then
-          #    echo "App is up and answering requests!";
-          #    break;
-          #  fi
-          #  echo "Waiting for the app to be ready...";
-          #  sleep 2;
-          # done
-
-          # if [ "$RESPONSE" -ne 200 ]; then
-          #  echo "App test failed with HTTP status $RESPONSE";
-          #  exit 1;
-          #fi
-
-          echo "127.0.0.1:$port"
-          for i in {1..10}; do
-            if curl -s http://127.0.0.1:$PORT > /dev/null; then
-              echo "App is up!";
-              break;
-            fi
-            echo "Waiting for the app to be ready...";
-            sleep 2;
-          done
-
-      # Step 6: Test application with curl
-      # - name: Test application with curl
-      #   run: |
-      #     echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_URL"
-      #     # Make a request to the web app using the custom hostname
-      #     RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_URL)
-      #     
-      #     if [ "$RESPONSE" -ne 200 ]; then
-      #       echo "App test failed with HTTP status $RESPONSE";
-      #       exit 1;
-      #     fi
-      # 
-      #     curl -s -i $SAW_TARGET_URL
-      #     
-      #     echo "App test passed with HTTP status $RESPONSE";
+          echo "App test passed with HTTP status $RESPONSE";
 
       # Setp 7: Start scanning agent
       - name: Start Scanning Agent
@@ -181,15 +160,16 @@ jobs:
           done
 
           docker logs probely-agent
+
+      # Step 10 Test connectivity
+      - name: Test connectivity
+        run: |
+          docker exec -t probely-agent apt-get update 
+          docker exec -t probely-agent apt-get install curl -y
+          echo docker exec -t probely-agent curl $SAW_TARGET_URL -v
+          docker exec -t probely-agent curl $SAW_TARGET_URL -v
           
-      #- name: Test connectivity
-      #  run: |
-      #    docker exec -t probely-agent apt-get update 
-      #    docker exec -t probely-agent apt-get install curl -y
-      #    echo docker exec -t probely-agent curl $SAW_TARGET_URL:$port -v
-      #    docker exec -t probely-agent curl $SAW_TARGET_URL:$PORT -v
-          
-      # Step 10: Install Probely CLI
+      # Step 10a: Install Probely CLI
       - name: Install Probely CLI
         run: |
           # echo "probely targets get --api-key $SAW_API_KEY"
@@ -198,7 +178,7 @@ jobs:
           # Test probely GET TARGETS
           probely targets get --api-key $SAW_API_KEY
       
-      # Step 11: Start Scan
+      # Step 11: Install Probely CLI & Start Scan
       - name: Start Scan
         run: |
           for i in {1..50}; do
