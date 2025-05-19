@@ -124,13 +124,12 @@ jobs:
       # Step 6: Wait for the app to start & test with curl
       - name: Test application with curl
         run: |
-         
+          ### DEBUG ###
+          echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT"
+          
           # Make a request to the web app using the custom hostname
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT)
 
-          ### DEBUG ###
-          echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT"
-           
           if [ "$RESPONSE" -ne 200 ]; then
              echo "App test failed with HTTP status $RESPONSE";
              exit 1;
