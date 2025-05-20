@@ -23,9 +23,9 @@ name: probely_ephemeral_tests
 
 on:
  # push:
- #   branches: [ "main", "qa", "dev" ]
+ #   branches: [ "prod", "qa", "dev" ]
  # pull_request:
- #   branches: [ "main", "qa", "dev" ]
+ #   branches: [ "prod", "qa", "dev" ]
  # release:
  #   types: [ created ]
   workflow_dispatch:
@@ -64,6 +64,7 @@ env:
   SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}                                          
   SAW_TARGET_PORT: ${{ vars.SAW_TARGET_PORT }}
   SAW_TARGET_PROTO: ${{ vars.SAW_TARGET_PROTO }}
+  ## get branch from github context e.g. juiceshop.dev, .qa, .prod, etc
   SAW_TARGET_URL:  "${{ vars.SAW_TARGET_PROTO }}://${{ vars.SAW_TARGET_NAME }}:${{ vars.SAW_TARGET_PORT }}"     
   SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}   
 
@@ -73,7 +74,7 @@ env:
   SAW_SCAN_PROFILE: ${{ vars.SAW_SCAN_PROFILE }}                                            
   CICD_ACTION: ${{ vars.SAW_CICD_ACTION }}                                              
   GITHUB_CONTEXT: ${{ toJson(github) }}
-  DEBUG_ME: ${{ vars.DEBUG_ME }}  
+  DEBUG: ${{ vars.DEBUG }}  
  
 jobs:
   build:
@@ -99,44 +100,28 @@ jobs:
           # Build the Docker image
           docker build -t $SAW_TARGET_NAME .
           
+          ### DEBUG ###
+
       # Step 5: Run app container
       - name: Run container
         run: |
           # Run the Docker container
           # hostname, network alias set for container to container comms
-          # default port exposed for runner to container comms (verify container is up)
 
           ### DEBUG ###
           echo "docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
-            --network-alias $SAW_TARGET_NAME \
-            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \                                                                
+            --network-alias $SAW_TARGET_NAME \                                                           
             -d $SAW_TARGET_NAME"
           
           docker run --name $SAW_TARGET_NAME \
             --hostname $SAW_TARGET_NAME \
             --network $DOCKER_NETWORK \
             --network-alias $SAW_TARGET_NAME \
-            -p $SAW_TARGET_PORT:$SAW_TARGET_PORT \
             -d $SAW_TARGET_NAME
 
-      # Step 6: Wait for the app to start & test with curl
-      - name: Test application with curl
-        run: |
-          ### DEBUG ###
-          #echo "curl -s -o /dev/null -w \"%{http_code}\" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT"
-          
-          # Make a request to the web app using the custom hostname
-          #RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $SAW_TARGET_PROTO://127.0.0.1:$SAW_TARGET_PORT)
-
-          #if [ "$RESPONSE" -ne 200 ]; then
-          #   echo "App test failed with HTTP status $RESPONSE";
-          #   exit 1;
-          #fi
-          #echo "App test passed with HTTP status $RESPONSE";
-
-      # Setp 7: Start scanning agent
+      # Setp 6: Start scanning agent
       - name: Start Scanning Agent
         run: |
           # Using docker agent
@@ -146,14 +131,14 @@ jobs:
             -e FARCASTER_AGENT_TOKEN=$SAW_AGENT_KEY \
             --device /dev/net/tun probely/farcaster-onprem-agent:v3
 
-
+          ### DEBUG ###
           echo "docker run -d --name probely-agent \
             --cap-add NET_ADMIN \
             --network $DOCKER_NETWORK \
             -e FARCASTER_AGENT_TOKEN=$SAW_AGENT_KEY \
             --device /dev/net/tun probely/farcaster-onprem-agent:v3"
             
-      # Step 9: Wait for agent to stat
+      # Step 7: Wait for agent to stat
       - name: Wait for agent to start
         run: |
           # Wait until the probely-agent is ready
@@ -171,26 +156,32 @@ jobs:
             sleep 2;
           done
 
+          ### DEBUG ###
           docker logs probely-agent
 
-      # Step 10 Test connectivity
-      - name: Test connectivity
+      # Step 8 Test connectivity
+      - name: Install Curl on Farcaster agent and test connectivity
         run: |
           docker exec -t probely-agent apt-get update 
           docker exec -t probely-agent apt-get install curl -y
+
+          ### debug ###
           echo docker exec -t probely-agent curl $SAW_TARGET_URL -v
+          
+          ### Fail if test is not successful
           docker exec -t probely-agent curl $SAW_TARGET_URL -v
           
-      # Step 10a: Install Probely CLI
+      # Step 9: Install Probely CLI
       - name: Install Probely CLI
         run: |
           # echo "probely targets get --api-key $SAW_API_KEY"
           # Install Probely CLI
           pip install probely
-          # Test probely GET TARGETS
+
+          ### DEBUG ###
           probely targets get --api-key $SAW_API_KEY
       
-      # Step 11: Install Probely CLI & Start Scan
+      # Step 10: Install Probely CLI & Start Scan
       - name: Start Scan
         run: |
           for i in {1..50}; do
@@ -216,7 +207,7 @@ jobs:
             exit 1
           fi
 
-      # Step 12: Wait for scan to end
+      # Step 11: Wait for scan to end
       - name: Wait for scan to end
         run: |
           # Wait until scan ends
@@ -235,7 +226,7 @@ jobs:
             sleep 30;
           done
 
-      # Step 13: check high vulnerabities
+      # Step 12: check high vulnerabities
       - name: Check for high vulnerabilities
         run: |
           HIGH_VULNS=$(probely scans get ${SCAN_ID} --api-key $SAW_API_KEY -o JSON | jq -r '.[0].highs')
@@ -253,7 +244,19 @@ jobs:
             echo "Scan doesn't have high vulnerabilities"
           fi
 
-      # Step 14: Clean up
+
+          # get date
+          # scan_date=$(date -z GMT)
+
+          # add log comments to github
+          # https://api.us.probely.com/targets/{{target_ID}}}}/findings/{{finding_id}}/?include=compliance
+          #   {"comment":"May. 19, 2025 at 08:35, Master, 2c56fdb"}
+
+          # add Finding Labels
+          # https://api.us.probely.com/targets/{{target_ID}}}}/findings/{{finding_id}}/?include=compliance
+          # {"labels":[{"id":"","name":"dev","add":"true"}]}
+
+      # Step 13: Clean up
       - name: Clean up Docker resources
         run: |
           docker stop $SAW_TARGET_NAME
