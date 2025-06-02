@@ -1,4 +1,4 @@
-# Snyk APi & Web Ephemeral Single Target Github Action
+=# Snyk APi & Web Ephemeral Single Target Github Action
 # This action will run Snyk API & Web (SAW) scans on the repository.
 # assumes:
 #    - target/scan config has already been created
@@ -253,9 +253,8 @@ jobs:
           FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SAW_SCAN_ID" \
            -H 'Content-Type: application/json' \
            -H 'Accept: application/json' \
-           -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(",")')
-
-         ## update FINDING labels and comments
+           -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(","))
+          ## update FINDING labels and comments
 
           SCAN_DATE=$(date +%Y-%m-%d)
          
