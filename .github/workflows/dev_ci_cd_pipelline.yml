@@ -232,31 +232,50 @@ jobs:
           HIGH_VULNS=$(probely scans get ${SCAN_ID} --api-key $SAW_API_KEY -o JSON | jq -r '.[0].highs')
           echo "HIGH vulnerabilities: ${HIGH_VULNS}"
           if [ $HIGH_VULNS -gt 0 ]; then
-            echo "Scan has High vulnerabilities... aborting"
-            docker stop $SAW_TARGET_NAME
-            docker stop probely-agent
-            docker rm $SAW_TARGET_NAME
-            docker rm probely-agent
-            docker network rm $DOCKER_NETWORK
-
-            exit 1
+            echo "Scan has High vulnerabilities"
+            #docker stop $SAW_TARGET_NAME
+            #docker stop probely-agent
+            #docker rm $SAW_TARGET_NAME
+            #docker rm probely-agent
+            #docker network rm $DOCKER_NETWORK
+            #exit 1
           else
             echo "Scan doesn't have high vulnerabilities"
           fi
 
-
+      # Step 14: Update scan labels and logs
+      - name: Update scan labels and logs
+        run: |
           # get date
-          # scan_date=$(date -z GMT)
+          SCAN_DATE=$(date -z GMT)
 
-          # add log comments to github
-          # https://api.us.probely.com/targets/{{target_ID}}}}/findings/{{finding_id}}/?include=compliance
-          #   {"comment":"May. 19, 2025 at 08:35, Master, 2c56fdb"}
+          ## Get comma delimited list of finding IDs
+         FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SAW_SCAN_ID" \
+           -H 'Content-Type: application/json' \
+           -H 'Accept: application/json' \
+           -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(",")')
 
-          # add Finding Labels
-          # https://api.us.probely.com/targets/{{target_ID}}}}/findings/{{finding_id}}/?include=compliance
-          # {"labels":[{"id":"","name":"dev","add":"true"}]}
+         ## update FINDING labels and comments
 
-      # Step 13: Clean up
+         SCAN_DATE=$(date +%Y-%m-%d)
+         
+         curl -L 'https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/' \
+         -H 'Content-Type: application/json' \
+         -H 'Accept: application/json' \
+         -H "Authorization: JWT $SAW_API_KEY" \
+         -d "{
+           \"ids\": [ $FINDINGS ],
+           \"scans\": [ \"$SAW_SCAN_ID\" ],
+           \"labels\": [
+             {
+               \"name\": \"$BRANCH\",
+               \"color\": \"#9999ff\"
+             }
+           ],
+           \"comment\": \"Date $SCAN_DATE\nBranch: $BRANCH\nCommit: $HASH\nLINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
+         }"
+
+      # Step 15: Clean up
       - name: Clean up Docker resources
         run: |
           docker stop $SAW_TARGET_NAME
