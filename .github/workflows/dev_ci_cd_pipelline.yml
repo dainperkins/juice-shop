@@ -50,7 +50,7 @@ env:
   # repo, release, branch, commit info from github env
   REPO_NAME:  ${{ github.event.repository.name }}                                        
   RELEASE:  ${{ github.event.release.tag_name }}                                       
-  BRANCH: ${{ github.context.ref_name }}
+  #BRANCH: ${{ github.context.ref_name }}
   COMMIT_HASH: ${{ github.sha }}
   
   ## Snyk API & Web Environment
@@ -250,7 +250,7 @@ jobs:
 
           ## Get Date
           SCAN_DATE=$(date +%Y-%m-%d)
-
+          BRANCH=Staging
           ## Debug
           echo "Scan date: $SCAN_DATE"
           
