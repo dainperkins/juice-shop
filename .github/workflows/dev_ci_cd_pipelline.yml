@@ -74,7 +74,7 @@ env:
   SAW_SCAN_PROFILE: ${{ vars.SAW_SCAN_PROFILE }}                                            
   CICD_ACTION: ${{ vars.SAW_CICD_ACTION }}                                              
   GITHUB_CONTEXT: ${{ toJson(github) }}
-  GBRANCH: ${{ github.ref) }}
+  # GBRANCH: ${{ github.ref) }}
   DEBUG: ${{ vars.DEBUG }}  
  
 jobs:
