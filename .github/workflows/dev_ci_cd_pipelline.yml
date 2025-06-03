@@ -254,7 +254,7 @@ jobs:
           echo "Scan date: $SCAN_DATE"
           
           ## Get comma delimited list of finding IDs
-          FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SAW_SCAN_ID" \
+          FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SCAN_ID" \
            -H "Content-Type: application/json" \
            -H "Accept: application/json" \
            -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(",")')
@@ -270,7 +270,7 @@ jobs:
             -H "Authorization: JWT $SAW_API_KEY" \
             -d "{
                \"ids\": [ $FINDINGS ],
-               \"scans\": [ \"$SAW_SCAN_ID\" ],
+               \"scans\": [ \"$SCAN_ID\" ],
                \"labels\": [
                   {
                     \"name\": \"$BRANCH\",
