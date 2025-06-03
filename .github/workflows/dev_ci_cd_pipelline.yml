@@ -246,17 +246,16 @@ jobs:
       # Step 14: Update scan labels and logs
       - name: Update scan labels and logs
         run: |
-          # get date
-          SCAN_DATE=$(date -z GMT)
 
+          ## Get Date
+          SCAN_DATE=$(date +%Y-%m-%d)
+          
           ## Get comma delimited list of finding IDs
           FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SAW_SCAN_ID" \
            -H 'Content-Type: application/json' \
            -H 'Accept: application/json' \
            -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(","))
           ## update FINDING labels and comments
-
-          SCAN_DATE=$(date +%Y-%m-%d)
          
           curl -L 'https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/' \
             -H 'Content-Type: application/json' \
