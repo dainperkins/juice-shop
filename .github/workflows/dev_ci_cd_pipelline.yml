@@ -50,7 +50,7 @@ env:
   # repo, release, branch, commit info from github env
   REPO_NAME:  ${{ github.event.repository.name }}                                        
   RELEASE:  ${{ github.event.release.tag_name }}                                       
-  BRANCH: ${{  github_context.ref.name }}
+  BRANCH: ${{ github.context.ref_name }}
   COMMIT_HASH: ${{ github.sha }}
   
   ## Snyk API & Web Environment
