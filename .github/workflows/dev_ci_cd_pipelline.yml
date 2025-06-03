@@ -264,7 +264,7 @@ jobs:
           echo "Findings: $FINDINGS"
 
           ## G
-          curl -L "https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/" \
+          curl -X POST -L "https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
             -H "Authorization: JWT $SAW_API_KEY" \
