@@ -235,7 +235,7 @@ jobs:
           #echo $BRANCH1
           
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-            BRANCH=${GITHUB_REF##*/})
+            BRANCH=${GITHUB_REF##*/}
           elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BRANCH=$GITHUB_BASE_REF
           elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
