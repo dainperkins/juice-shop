@@ -60,13 +60,13 @@ env:
   SAW_AGENT_KEY: ${{ secrets.SAW_AGENT_KEY }}                                           
  
   ## Snyk APi & Web Target information
-  # Snyk API & Web target name, protocol (http/https), and port (as configured in container)
-  SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}                                          
+  SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}
+  SAW_TARGET_NAME: ${{ vars.SAW_TARGET_NAME }}
+  ### Should get these from SAW
   SAW_TARGET_PORT: ${{ vars.SAW_TARGET_PORT }}
   SAW_TARGET_PROTO: ${{ vars.SAW_TARGET_PROTO }}
-  ## get branch from github context e.g. juiceshop.dev, .qa, .prod, etc
   SAW_TARGET_URL:  "${{ vars.SAW_TARGET_PROTO }}://${{ vars.SAW_TARGET_NAME }}:${{ vars.SAW_TARGET_PORT }}"     
-  SAW_TARGET_ID:  ${{ vars.SAW_TARGET_ID }}   
+   
 
   ## Snyk API & Web optional fields
   # Not yet implemented - scan type (full, inremental), profile to specify scan profile, CICD_Action=block|info, context & debugging
@@ -227,26 +227,23 @@ jobs:
             sleep 30;
           done
 
-      # Step 12: check high vulnerabities
-      - name: Check for high vulnerabilities
-        run: |
-          HIGH_VULNS=$(probely scans get ${SCAN_ID} --api-key $SAW_API_KEY -o JSON | jq -r '.[0].highs')
-          echo "HIGH vulnerabilities: ${HIGH_VULNS}"
-          if [ $HIGH_VULNS -gt 0 ]; then
-            echo "Scan has High vulnerabilities"
-            #docker stop $SAW_TARGET_NAME
-            #docker stop probely-agent
-            #docker rm $SAW_TARGET_NAME
-            #docker rm probely-agent
-            #docker network rm $DOCKER_NETWORK
-            #exit 1
-          else
-            echo "Scan doesn't have high vulnerabilities"
-          fi
-
-      # Step 14: Update scan labels and logs
+      # Step 12: Update scan labels and logs
       - name: Update scan labels and logs
         run: |
+          ## Set Branch name
+          #BRANCH1="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          #echo $BRANCH1
+          
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            BRANCH=${GITHUB_REF##*/})
+
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            BRANCH=$GITHUB_BASE_REF
+            echo "${GITHUB_EVENT_NAME} - $BRANCH"
+          elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            BRANCH=${{ inputs.branch }}
+            echo $BRANCH
+          fi
 
           ## Get Date
           SCAN_DATE=$(date +%Y-%m-%d)
@@ -281,7 +278,24 @@ jobs:
              \"comment\": \"Date $SCAN_DATE\nBranch: $BRANCH\nCommit: $HASH\nLINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
             }"
 
-      # Step 15: Clean up
+      # Step 13: CI/CD Gating
+      - name: Fail on HIGH vulnerabilities
+        run: |
+          HIGH_VULNS=$(probely scans get ${SCAN_ID} --api-key $SAW_API_KEY -o JSON | jq -r '.[0].highs')
+          echo "HIGH vulnerabilities: ${HIGH_VULNS}"
+          if [ $HIGH_VULNS -gt 0 ]; then
+            echo "Scan has High vulnerabilities"
+            #docker stop $SAW_TARGET_NAME
+            #docker stop probely-agent
+            #docker rm $SAW_TARGET_NAME
+            #docker rm probely-agent
+            #docker network rm $DOCKER_NETWORK
+            #exit 1
+          else
+            echo "Scan doesn't have high vulnerabilities"
+          fi
+          
+      # Step 14: Clean up
       - name: Clean up Docker resources
         run: |
           docker stop $SAW_TARGET_NAME
