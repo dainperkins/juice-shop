@@ -236,14 +236,12 @@ jobs:
           
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             BRANCH=${GITHUB_REF##*/})
-
           elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BRANCH=$GITHUB_BASE_REF
-            echo "${GITHUB_EVENT_NAME} - $BRANCH"
           elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             BRANCH=${{ inputs.branch }}
-            echo $BRANCH
           fi
+          echo $BRANCH
 
           ## Get Date
           SCAN_DATE=$(date +%Y-%m-%d)
