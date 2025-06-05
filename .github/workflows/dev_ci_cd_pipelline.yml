@@ -230,36 +230,36 @@ jobs:
       # Step 12: Update scan labels and logs
       - name: Update scan labels and logs
         run: |
-          ## Set Branch name
-          #BRANCH1="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-          #echo $BRANCH1
-          
+          ## Set Branch name, version
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             BRANCH=${GITHUB_REF##*/}
           elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             BRANCH=$GITHUB_BASE_REF
           elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             BRANCH=${{ inputs.branch }}
+            VERSION=${{ inputs.version }}
           fi
-          echo $BRANCH
+
+          ## Debug
+          echo Branch: $BRANCH
+          echo Version: $VERSION
 
           ## Get Date
           SCAN_DATE=$(date +%Y-%m-%d)
-          BRANCH=Staging
+          
           ## Debug
           echo "Scan date: $SCAN_DATE"
           
-          ## Get comma delimited list of finding IDs
+          ## Get list of finding IDs
           FINDINGS=$(curl -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/?scan=$SCAN_ID" \
            -H "Content-Type: application/json" \
            -H "Accept: application/json" \
            -H "Authorization: JWT $SAW_API_KEY" | jq -r '[.results[].id] | join(",")')
-          ## update FINDING labels and comments
          
           ## Debug
           echo "Findings: $FINDINGS"
 
-          ## G
+          ## update FINDING labels and comments
           curl -X POST -L "https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
@@ -273,7 +273,7 @@ jobs:
                     \"color\": \"#9999ff\"
                   }
               ],
-             \"comment\": \"Date $SCAN_DATE\nBranch: $BRANCH\nCommit: $HASH\nLINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
+             \"comment\": \"Date $SCAN_DATE, Type: $SAW_SCAN_TYPE, $Branch: $BRANCH, Version: $VERSION, Commit: $HASH, LINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
             }"
 
       # Step 13: CI/CD Gating
