@@ -237,7 +237,7 @@ jobs:
             BRANCH=$GITHUB_BASE_REF
           elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             BRANCH=${{ inputs.branch }}
-            VERSION=${{ inputs.version }}
+            VERSION=${{ inputs.release }}
           fi
 
           ## Debug
