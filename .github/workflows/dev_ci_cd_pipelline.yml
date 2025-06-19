@@ -240,14 +240,12 @@ jobs:
             VERSION=${{ inputs.release }}
           fi
 
-          ## Debug
-          echo Branch: $BRANCH
-          echo Version: $VERSION
-
           ## Get Date
           SCAN_DATE=$(date +%Y-%m-%d)
           
           ## Debug
+          echo Branch: $BRANCH
+          echo Version: $VERSION
           echo "Scan date: $SCAN_DATE"
           
           ## Get list of finding IDs
@@ -275,6 +273,23 @@ jobs:
               ],
              \"comment\": \"Date $SCAN_DATE, Type: $SAW_SCAN_TYPE, $Branch: $BRANCH, Version: $VERSION, Commit: $HASH, LINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
             }"
+
+            ## Debug
+            echo "curl -X POST -L \"https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/\" \
+            -H \"Content-Type: application/json\" \
+            -H \"Accept: application/json\" \
+            -H \"Authorization: JWT $SAW_API_KEY\" \
+            -d \"{
+               \"ids\": [ $FINDINGS ],
+               \"scans\": [ \"$SCAN_ID\" ],
+               \"labels\": [
+                  {
+                    \"name\": \"$BRANCH\",
+                    \"color\": \"#9999ff\"
+                  }
+              ],
+             \"comment\": \"Date $SCAN_DATE, Type: $SAW_SCAN_TYPE, $Branch: $BRANCH, Version: $VERSION, Commit: $HASH, LINK: https://github.com/dainperkins/juice-shop/commit/$HASH\"
+            }\"
 
       # Step 13: CI/CD Gating
       - name: Fail on HIGH vulnerabilities
