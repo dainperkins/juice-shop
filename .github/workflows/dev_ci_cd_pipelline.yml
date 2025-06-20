@@ -258,7 +258,7 @@ jobs:
           echo "Findings: $FINDINGS"
 
           ## update FINDING labels and comments
-          curl -X POST -L "https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/" \
+          curl -X POST -L "https://api.probely.com/targets/$SAW_TARGET_ID/findings/bulk/update/" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
             -H "Authorization: JWT $SAW_API_KEY" \
@@ -275,7 +275,7 @@ jobs:
             }"
 
             ## Debug
-            echo "curl -X POST -L \"https://api.probely.com/targets/2JF9SVVq6EKP/findings/bulk/update/\" \
+            echo "curl -X POST -L \"https://api.probely.com/targets/$SAW_TARGET_ID/findings/bulk/update/\" \
             -H \"Content-Type: application/json\" \
             -H \"Accept: application/json\" \
             -H \"Authorization: JWT $SAW_API_KEY\" \
